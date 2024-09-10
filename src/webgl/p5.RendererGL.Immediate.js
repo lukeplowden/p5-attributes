@@ -33,6 +33,8 @@ import './p5.RenderBuffer';
 p5.RendererGL.prototype.beginShape = function(mode) {
   this.immediateMode.shapeMode =
     mode !== undefined ? mode : constants.TESS;
+  this.currUserAttribute = undefined;
+  this._useUserAttributes = false;
   this.immediateMode.geometry.reset();
   this.immediateMode.contourIndices = [];
   return this;
@@ -113,6 +115,11 @@ p5.RendererGL.prototype.vertex = function(x, y) {
   const vert = new p5.Vector(x, y, z);
   this.immediateMode.geometry.vertices.push(vert);
   this.immediateMode.geometry.vertexNormals.push(this._currentNormal);
+  if (this._useUserAttributes){
+    const name = this.currUserAttribute.name;
+    const data = this.currUserAttribute.data;
+    this.immediateMode.geometry.setAttribute(name, data);
+  }
   const vertexColor = this.curFillColor || [0.5, 0.5, 0.5, 1.0];
   this.immediateMode.geometry.vertexColors.push(
     vertexColor[0],
@@ -163,6 +170,23 @@ p5.RendererGL.prototype.vertex = function(x, y) {
   this.immediateMode._quadraticVertex[2] = z;
 
   return this;
+};
+
+p5.RendererGL.prototype._setAttribute = function(attributeName, data){
+  // if attributeName is in one of default, could throw warning or let the user define them?
+  const buff = attributeName.concat('Buffer');
+  const bufferExists = this.immediateMode
+    .buffers
+    .user
+    .some(buffer => buffer.dst === buff);
+  if(!bufferExists){
+    const size = data.length ? data.length : 0;
+    this.immediateMode.buffers.user.push(
+      new p5.RenderBuffer(size, attributeName, buff, attributeName, this)
+    );
+  }
+  this._useUserAttributes = true;
+  this.currUserAttribute = { name: attributeName, data: data };
 };
 
 /**
@@ -519,6 +543,11 @@ p5.RendererGL.prototype._drawImmediateFill = function(count = 1) {
   for (const buff of this.immediateMode.buffers.fill) {
     buff._prepareBuffer(this.immediateMode.geometry, shader);
   }
+  if (this._useUserAttributes){
+    for (const buff of this.immediateMode.buffers.user){
+      buff._prepareBuffer(this.immediateMode.geometry, shader);
+    }
+  }
   shader.disableRemainingAttributes();
 
   this._applyColorBlend(
@@ -564,6 +593,11 @@ p5.RendererGL.prototype._drawImmediateStroke = function() {
   this._setStrokeUniforms(shader);
   for (const buff of this.immediateMode.buffers.stroke) {
     buff._prepareBuffer(this.immediateMode.geometry, shader);
+  }
+  if (this._useUserAttributes){
+    for (const buff of this.immediateMode.buffers.user){
+      buff._prepareBuffer(this.immediateMode.geometry, shader);
+    }
   }
   shader.disableRemainingAttributes();
   this._applyColorBlend(
