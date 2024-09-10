@@ -79,6 +79,21 @@ p5.RendererGL.prototype.createBuffers = function(gId, model) {
 
   let indexBuffer = buffers.indexBuffer;
 
+  if (model.userAttributes.length > 0){
+    for (const attr of model.userAttributes){
+      const buff = attr.name.concat('Buffer');
+      const bufferExists = this.retainedMode
+      .buffers
+      .user
+      .some(buffer => buffer.dst === buff);
+      if(bufferExists){
+        this.retainedMode.buffers.user.push(
+          new p5.RenderBuffer(attr.size, attr.name, buff, attr.name, this)
+        );
+      }
+    }
+  }
+
   if (model.faces.length) {
     // allocate space for faces
     if (!indexBuffer) indexBuffer = buffers.indexBuffer = gl.createBuffer();
@@ -126,17 +141,21 @@ p5.RendererGL.prototype.createBuffers = function(gId, model) {
 p5.RendererGL.prototype.drawBuffers = function(gId) {
   const gl = this.GL;
   const geometry = this.retainedMode.geometry[gId];
-
   if (
     !this.geometryBuilder &&
     this._doFill &&
-    this.retainedMode.geometry[gId].vertexCount > 0
+    geometry.vertexCount > 0
   ) {
     this._useVertexColor = (geometry.model.vertexColors.length > 0);
     const fillShader = this._getRetainedFillShader();
     this._setFillUniforms(fillShader);
     for (const buff of this.retainedMode.buffers.fill) {
       buff._prepareBuffer(geometry, fillShader);
+    }
+    if (geometry.model.userAttributes.length > 0){
+      for (const buff of this.retainedMode.buffers.user){
+        buff._prepareBuffer(geometry, fillShader);
+      }
     }
     fillShader.disableRemainingAttributes();
     if (geometry.indexBuffer) {
@@ -157,6 +176,11 @@ p5.RendererGL.prototype.drawBuffers = function(gId) {
     this._setStrokeUniforms(strokeShader);
     for (const buff of this.retainedMode.buffers.stroke) {
       buff._prepareBuffer(geometry, strokeShader);
+    }
+    if (geometry.model.userAttributes.length > 0){
+      for (const buff of this.retainedMode.buffers.user){
+        buff._prepareBuffer(geometry, strokeShader);
+      }
     }
     strokeShader.disableRemainingAttributes();
     this._applyColorBlend(
