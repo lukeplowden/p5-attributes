@@ -283,6 +283,8 @@ p5.Geometry = class Geometry {
     // One color per vertex representing the stroke color at that vertex
     this.vertexStrokeColors = [];
 
+    // List of user attribute names to clear each beginShape call
+    this.userAttributes = [];
     // One color per line vertex, generated automatically based on
     // vertexStrokeColors in _edgesToVertices()
     this.lineVertexColors = new p5.DataArray();
@@ -450,6 +452,9 @@ p5.Geometry = class Geometry {
     this.vertexNormals.length = 0;
     this.uvs.length = 0;
 
+    for (const attr of this.userAttributes){
+      this[attr.name].length = 0;
+    }
     this.dirtyFlags = {};
   }
 
@@ -1909,6 +1914,17 @@ p5.Geometry = class Geometry {
       }
     }
     return this;
+  }
+
+  setAttribute(attributeName, data){
+    if (!this.hasOwnProperty(attributeName)){
+      this[attributeName] = [];
+      this.userAttributes.push({
+        name: attributeName,
+        size: data.length ? data.length : 1
+      });
+    }
+    this[attributeName].push(...data);
   }
 };
 
