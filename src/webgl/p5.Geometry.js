@@ -453,8 +453,10 @@ p5.Geometry = class Geometry {
     this.uvs.length = 0;
 
     for (const attr of this.userAttributes){
-      this[attr.name].length = 0;
+      delete this[attr.name];
     }
+    this.userAttributes.length = 0;
+
     this.dirtyFlags = {};
   }
 
