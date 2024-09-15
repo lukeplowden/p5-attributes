@@ -80,21 +80,6 @@ p5.RendererGL.prototype.createBuffers = function(gId, model) {
 
   let indexBuffer = buffers.indexBuffer;
 
-  if (model.userAttributes.length > 0){
-    for (const attr of model.userAttributes){
-      const buff = attr.name.concat('Buffer');
-      const bufferExists = this.retainedMode
-      .buffers
-      .user
-      .some(buffer => buffer.dst === buff);
-      if(bufferExists){
-        this.retainedMode.buffers.user.push(
-          new p5.RenderBuffer(attr.size, attr.name, buff, attr.name, this)
-        );
-      }
-    }
-  }
-
   if (model.faces.length) {
     // allocate space for faces
     if (!indexBuffer) indexBuffer = buffers.indexBuffer = gl.createBuffer();
@@ -130,6 +115,20 @@ p5.RendererGL.prototype.createBuffers = function(gId, model) {
     ? model.lineVertices.length / 3
     : 0;
 
+  if (model.userAttributes.length > 0){
+    for (const attr of model.userAttributes){
+      const buff = attr.name.concat('Buffer');
+      const bufferExists = this.retainedMode
+      .buffers
+      .user
+      .some(buffer => buffer.dst === buff);
+      if(!bufferExists){
+        this.retainedMode.buffers.user.push(
+          new p5.RenderBuffer(attr.size, attr.name, buff, attr.name, this)
+        );
+      }
+    }
+  }
   return buffers;
 };
 
