@@ -1919,14 +1919,19 @@ p5.Geometry = class Geometry {
   }
 
   setAttribute(attributeName, data){
+    const size = data.length ? data.length : 1;
     if (!this.hasOwnProperty(attributeName)){
       this[attributeName] = [];
       this.userAttributes.push({
         name: attributeName,
-        size: data.length ? data.length : 1
+        size: size
       });
     }
+    if (size > 1){
     this[attributeName].push(...data);
+    } else{
+      this[attributeName].push(data);
+    }
   }
 };
 
