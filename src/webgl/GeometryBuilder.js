@@ -66,7 +66,6 @@ class GeometryBuilder {
         const size = attr.size;
         const data = input[name];
         for (let i = 0; i < data.length; i+=size){
-          console.log(data.slice(i, i + size));
           this.geometry.setAttribute(name, data.slice(i, i + size));
         }
       }
