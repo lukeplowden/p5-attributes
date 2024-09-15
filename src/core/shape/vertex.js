@@ -2254,9 +2254,9 @@ p5.prototype.normal = function(x, y, z) {
 };
 
 p5.prototype.setAttribute = function(attributeName, data){
-  _assert3d('setAttribute');
+  // this._assert3d('setAttribute');
   // p5._validateParameters('setAttribute', arguments);
-  this._renderer._setAttribute(attributeName, data);
+  this._renderer.setAttribute(attributeName, data);
 };
 
 export default p5;
